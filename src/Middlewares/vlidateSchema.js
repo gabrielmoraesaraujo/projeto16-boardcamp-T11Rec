@@ -1,8 +1,28 @@
-export function validateGame (req, res, next) {
+export function validateSchema (schema) {
 
-    const { error } = gameSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({ error: 'Dados inválidos' });
+    return (req, res, next) => {
+
+        const validation = schema.validate(req.body, { abortEarly: false })
+        if (validation.error) {
+            const errors = validation.error.details.map(detail => detail.message)
+            return res.status(422).send(errors)        
+        }
+
+        next()
     }
-    next();
-  };
+   
+  }
+
+
+export function validateCustomer (schema){
+    return(req, res, next) => {
+
+        const validation = schema.validate(req.body, { abortEarly: false});
+        if (validation) {
+           const errors = validation.error.details.map(detail => detail.message)
+                  return res.status(400).send(errors)  
+        }
+        next()
+    }
+
+}

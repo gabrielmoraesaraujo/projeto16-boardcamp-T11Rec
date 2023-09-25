@@ -1,31 +1,38 @@
 import db from '../Database/Database.Conection.js';
 
-//const gameSchema = require('../schemas/gameSchema');
-
 // Criar um novo jogo
-export default function createGame (req, res){
+export async function createGame (req, res){
+
   try {
     const { name, image, stockTotal, pricePerDay } = req.body;
 
-    // Validar os dados de entrada usando o schema
-    const { error } = gameSchema.validate({ name, image, stockTotal, pricePerDay });
-    if (error) {
-      return res.status(400).json({ error: 'Dados inválidos' });
+    const checkGameQuery = 'SELECT * FROM games WHERE name = $1';
+    const checkGameValues = [name];
+    const existingGame = await db.query(checkGameQuery, checkGameValues);
+
+    if (existingGame.rows.length > 0) {
+      return res.status(409).send({ error: 'Jogo já existe' });
+    }
+
+    // Verificar se stockTotal e pricePerDay são maiores que 0
+    if (stockTotal <= 0 || pricePerDay <= 0) {
+      return res.status(400).send({ error: 'stockTotal e pricePerDay devem ser maiores que 0' });
+
     }
 
     // Inserir o novo jogo no banco de dados
-    const query = 'INSERT INTO games (name, image, stockTotal, pricePerDay) VALUES ($1, $2, $3, $4) RETURNING *';
-    const values = [name, image, stockTotal, pricePerDay];
-    const result = await db.query(query, values);
+    const result = await db.query('INSERT INTO games (name, image, stockTotal, pricePerDay) VALUES ($1, $2, $3, $4)', [name, image, stockTotal, pricePerDay]);
 
-    // Retornar o jogo criado
-    const game = result.rows[0];
-    res.status(201).json(game);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao criar o jogo' });
-  }
-};
+    // Retornar status 201 (Created) sem dados adicionais
+    res.status(201).send(result);
+  } catch(err){
+    res.status(500).send(err.message);
+    console.log(err)
+
+
+ }
+}
+
 
 // Obter todos os jogos
 export async function getGames (req, res)  {
@@ -36,7 +43,7 @@ export async function getGames (req, res)  {
 
     // Retornar a lista de jogos
     const games = result.rows;
-    res.status(200).json(games);
+    res.status(200).send(games);
   } catch (error) {
     res.status(500).send(error.message);
   }
