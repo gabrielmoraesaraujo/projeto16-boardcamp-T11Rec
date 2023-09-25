@@ -3,6 +3,7 @@ import { getGames, createGame } from '../Controllers/controller.games.js';
 import { validateSchema } from '../Middlewares/vlidateSchema.js';
 import { gameSchema } from '../Schemas/gamesSchema.js';
 import { customerSchema } from '../Schemas/customerSchema.js';
+import { rentalsSchema} from '../Schemas/createRentalSchema.js'
 
 
 const boardRouter = Router()
@@ -22,6 +23,18 @@ boardRouter.get('/customers', getCustomerById)
 
 // Rota para modificar um usuario
 boardRouter.put('/customer', validateSchema(customerSchema), updateCustomer)
+
+// Criar um novo aluguel
+boardRouter.post('/rentals', validateSchema(rentalsSchema), rentalController.createRental);
+
+// Listar todos os aluguéis
+boardRouter.get('/rentals', rentalController.listRentals);
+
+// Finalizar um aluguel
+boardRouter.post('/rentals:id/return', validateSchema(rentalsSchema), rentalController.returnRental);
+
+// Excluir um aluguel
+boardRouter.delete('/rentals:id', rentalController.deleteRental);
 
 
 
